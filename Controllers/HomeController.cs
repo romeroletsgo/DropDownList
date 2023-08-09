@@ -1,32 +1,50 @@
 ﻿using DropDownList.Models;
+using DropDownList.Services;
+using DropDownList.ViewModels;
 using Microsoft.AspNetCore.Mvc;
-using System.Diagnostics;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace DropDownList.Controllers
 {
-	public class HomeController : Controller
-	{
-		private readonly ILogger<HomeController> _logger;
+    public class HomeController : Controller
+    {
+        ILandRepository _landsRepository;
+        ICityRepository _citiesRepository;
 
-		public HomeController(ILogger<HomeController> logger)
-		{
-			_logger = logger;
-		}
+        public IActionResult Index(int landId = 0)
+        {
+            ViewLand viewLand;
+            List<Land> lands  = _landsRepository.Lands;
+            List<City> cities = _citiesRepository.GetAll();
 
-		public IActionResult Index()
-		{
-			return View();
-		}
+            ViewBag.Lands = new SelectList(lands.OrderBy(land => land.LandId), "LandId", "Name");
 
-		public IActionResult Privacy()
-		{
-			return View();
-		}
+            List<City> filteredCities = new List<City>();
 
-		[ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-		public IActionResult Error()
-		{
-			return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-		}
-	}
+            if (landId != 0)
+            {
+                filteredCities = cities.Where(city => city.LandId == landId).ToList();
+                viewLand = new ViewLand() { LandId = landId, Cities = filteredCities };
+            }
+            else
+            {
+                viewLand = new ViewLand() { LandId = landId, Cities = cities };
+            }
+
+            return View(viewLand);
+        }
+
+        [HttpPost]
+        public IActionResult Select(string country)
+        {
+            List<Land> lands = _landsRepository.Lands;
+            return RedirectToAction("Index", "Home", new { landId = country });
+        }
+
+        public HomeController()
+        {
+            _landsRepository = new LandRepository();
+            _citiesRepository = new CityRepository(_landsRepository);
+        }
+    }
 }
