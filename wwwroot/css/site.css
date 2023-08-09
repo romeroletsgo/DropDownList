@@ -6,6 +6,10 @@ body {
     font-family: 'Noto Sans', sans-serif;
 }
 
+a {
+    color: #ffffff;
+}
+
 .row{
     color: white;
 }
